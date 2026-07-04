@@ -2,9 +2,8 @@
   "name": "wastra-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "api/index.ts",
   "scripts": {
-    "dev": "tsx server.ts",
+    "dev": "tsx dev.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
