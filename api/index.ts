@@ -53,7 +53,7 @@ app.post('/classify', async (c) => {
   }
 })
 
-// Endpoint 2: Detection (YOLOv8 on Hugging Face - to be uploaded)
+// Endpoint 2: Detection (YOLOv8 on Hugging Face Space)
 app.post('/detect', async (c) => {
   try {
     const formData = await c.req.formData()
@@ -63,25 +63,20 @@ app.post('/detect', async (c) => {
       return c.json({ error: 'No image provided' }, 400)
     }
 
-    const HF_TOKEN = process.env.HF_TOKEN
-    // The user's future YOLO model on HF
-    const MODEL_ID = process.env.HF_MODEL_DETECT || 'keremberke/yolov8m-hard-hat-detection' // Placeholder
+    const SPACE_URL = 'https://maftuh-main-wastra-yolo-api.hf.space/predict'
+    
+    // We forward the same formData (containing 'image') to the Space
+    const spaceFormData = new FormData()
+    spaceFormData.append('image', file)
 
-    if (!HF_TOKEN) {
-      return c.json({ error: 'HF_TOKEN environment variable is not set' }, 500)
+    const response = await fetch(SPACE_URL, {
+      method: 'POST',
+      body: spaceFormData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Space responded with status: ${response.status}`)
     }
-
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${MODEL_ID}`,
-      {
-        headers: {
-          Authorization: `Bearer ${HF_TOKEN}`,
-          'Content-Type': file.type,
-        },
-        method: 'POST',
-        body: file,
-      }
-    )
 
     const result = await response.json()
     return c.json({ success: true, data: result })
