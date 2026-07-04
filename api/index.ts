@@ -86,4 +86,42 @@ app.post('/detect', async (c) => {
   }
 })
 
+// Endpoint 3: Generation (SD + LoRA on Hugging Face Space)
+app.post('/generate', async (c) => {
+  try {
+    const { prompt } = await c.req.json()
+
+    if (!prompt) {
+      return c.json({ error: 'No prompt provided' }, 400)
+    }
+
+    const SPACE_URL = 'https://maftuh-main-wastra-lora-api.hf.space/generate'
+    
+    const response = await fetch(SPACE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Space responded with status: ${response.status}`)
+    }
+
+    // Since the Space returns an image, we can either return the raw binary
+    // or return it as base64. Let's return the raw image buffer to the client.
+    const imageBuffer = await response.arrayBuffer()
+    
+    return new Response(imageBuffer, {
+      headers: {
+        'Content-Type': 'image/png',
+      },
+    })
+  } catch (error: any) {
+    console.error('Generation error:', error)
+    return c.json({ error: 'Failed to generate image' }, 500)
+  }
+})
+
 export default handle(app)
