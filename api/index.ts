@@ -19,7 +19,7 @@ app.get('/', (c) => {
   return c.json({ message: 'Wastra Backend API is running on Hono + Vercel Edge!' })
 })
 
-// Endpoint 1: Classification (MobileNetV3 on Hugging Face)
+// Endpoint 1: Classification (MobileNetV2 on Hugging Face Space)
 app.post('/classify', async (c) => {
   try {
     const formData = await c.req.formData()
@@ -29,25 +29,21 @@ app.post('/classify', async (c) => {
       return c.json({ error: 'No image provided' }, 400)
     }
 
-    const HF_TOKEN = process.env.HF_TOKEN
-    // The user's classification model on HF
-    const MODEL_ID = process.env.HF_MODEL_CLASSIFY || 'google/mobilenet_v2_1.0_224' // Placeholder
+    // Call the Flask API running on Hugging Face Space
+    const SPACE_URL = 'https://maftuh-main-batik-classifier.hf.space/predict'
+    
+    // We forward the same formData (containing 'image') to the Space
+    const spaceFormData = new FormData()
+    spaceFormData.append('image', file)
 
-    if (!HF_TOKEN) {
-      return c.json({ error: 'HF_TOKEN environment variable is not set' }, 500)
+    const response = await fetch(SPACE_URL, {
+      method: 'POST',
+      body: spaceFormData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Space responded with status: ${response.status}`)
     }
-
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${MODEL_ID}`,
-      {
-        headers: {
-          Authorization: `Bearer ${HF_TOKEN}`,
-          'Content-Type': file.type,
-        },
-        method: 'POST',
-        body: file,
-      }
-    )
 
     const result = await response.json()
     return c.json({ success: true, data: result })
