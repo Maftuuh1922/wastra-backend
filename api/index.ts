@@ -2,16 +2,11 @@ import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
 import { cors } from 'hono/cors'
 
-// Vercel Edge Runtime for maximum performance
-export const config = {
-  runtime: 'edge',
-}
-
 export const app = new Hono().basePath('/api')
 
 // Enable CORS so the frontend can call this API
 app.use('*', cors({
-  origin: '*', // In production, replace with frontend URL
+  origin: ['https://wastra.vercel.app', 'http://localhost:3000'],
   allowMethods: ['GET', 'POST', 'OPTIONS'],
 }))
 
